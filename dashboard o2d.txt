@@ -1,0 +1,277 @@
+Developer Jaipal
+
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Order Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root{
+  --bg:#000000; --surface:#0b0b0d; --line:#26272b; --fg:#ecedf0; --muted:#9a9ea8;
+  --accent:#5aa9e6; --accent-soft:#0f2433; --accent-2:#2f5f86;
+  --good:#3fcf8e; --warn:#e8a93a; --bad:#f0705a;
+  --font-head:"Space Grotesk","Segoe UI",system-ui,sans-serif;
+  --font-body:"Inter","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;
+  padding:20px 16px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2{font-family:var(--font-head);margin:0}
+h1{font-size:26px;letter-spacing:-.01em}
+h2{font-size:15px;font-weight:600}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.btn{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);
+  padding:7px 13px;border-radius:8px;cursor:pointer;min-height:34px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#000}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.filters{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.frow{display:flex;gap:10px;align-items:flex-start}
+.flabel{flex:0 0 78px;padding-top:6px;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.chips.scroll{max-height:96px;overflow-y:auto;padding-right:4px}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--fg);
+  padding:4px 11px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.kpi .v{font-family:var(--font-head);font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
+.kpi .n{font-size:12.5px;color:var(--muted);margin-top:2px}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px}
+.bar>i{display:block;height:100%;background:var(--good)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card .hint{color:var(--muted);font-size:12.5px;margin:2px 0 10px}
+.cv{position:relative;height:300px}
+.empty{height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:12px}
+.tw{overflow:auto;max-height:380px}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--accent-soft);color:var(--accent)}
+.msg{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.msg p{margin:0;min-width:0;flex:1 1 260px}
+@media (max-width:560px){.frow{flex-direction:column;gap:4px}.flabel{flex:none;padding-top:0}.cv{height:260px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Order Dashboard</h1>
+      <div class="sub" id="sub">Sheet: EXPANDED DATA · loading…</div>
+    </div>
+    <button class="btn primary" id="refresh" type="button">Refresh data</button>
+  </div>
+
+  <div id="notice" hidden></div>
+
+  <div class="tools">
+    <button class="btn" id="toggleF" type="button">Hide filters</button>
+    <button class="btn" id="reset" type="button">Reset filters</button>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="frow"><div class="flabel">PO Month</div><div class="chips" id="fMonth"></div></div>
+    <div class="frow"><div class="flabel">Delivery</div><div class="chips" id="fDelivery"></div></div>
+    <div class="frow"><div class="flabel">Status</div><div class="chips" id="fStatus"></div></div>
+    <div class="frow"><div class="flabel">Company</div><div class="chips scroll" id="fCompany"></div></div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <div class="card"><h2>Company-wise total order qty</h2><div class="hint">Column D company, column F order total qty. Top 10.</div><div class="cv" id="cvCompany"></div></div>
+    <div class="card"><h2>On time vs delayed</h2><div class="hint">Share of dispatch lines by delivery result.</div><div class="cv" id="cvTime"></div></div>
+    <div class="card"><h2>Orders by month</h2><div class="hint">Order qty by PO month, dispatched qty by dispatch month.</div><div class="cv" id="cvMonth"></div></div>
+    <div class="card"><h2>Pending qty by company</h2><div class="hint">Column L pending qty on lines still pending.</div><div class="cv" id="cvPending"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>Pending lines</h2>
+    <div class="hint" id="pendHint"></div>
+    <div class="tw"><table><thead><tr><th>Company</th><th>Cust PO</th><th>PO date</th><th>Pending item</th><th class="num">Pending qty</th></tr></thead><tbody id="pendBody"></tbody></table></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function(){
+  var SHEET_ID="1O2u1iakOHHv-jG8EUOOJ2iVhAsjibxNxxSQ-LP6yDDI", SHEET_NAME="EXPANDED DATA";
+  var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var data=[], flt={month:"all",delivery:"all",status:"all",company:"all"}, charts={};
+  var $=function(id){return document.getElementById(id)};
+  var fmt=function(n){return Math.round(n).toLocaleString("en-IN")};
+  function num(v){var n=parseFloat(String(v==null?"":v).replace(/,/g,""));return isNaN(n)?0:n}
+  function pd(s){var m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(s||"").trim());return m?{y:+m[3],m:+m[2]}:null}
+  function mkey(d){return d?d.y+"-"+(d.m<10?"0":"")+d.m:""}
+  function mlabel(k){var p=k.split("-");return MON[+p[1]-1]+" "+p[0]}
+  function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function trunc(s,n){s=String(s);return s.length>n?s.slice(0,n-1)+"…":s}
+
+  function parseCSV(t){
+    var rows=[],row=[],f="",q=false;
+    for(var i=0;i<t.length;i++){var c=t[i];
+      if(q){ if(c==='"'){ if(t[i+1]==='"'){f+='"';i++}else q=false } else f+=c }
+      else if(c==='"')q=true; else if(c===","){row.push(f);f=""}
+      else if(c==="\n"||c==="\r"){ if(c==="\r"&&t[i+1]==="\n")i++; row.push(f);f="";rows.push(row);row=[] }
+      else f+=c }
+    if(f!==""||row.length){row.push(f);rows.push(row)}
+    return rows;
+  }
+
+  function toRows(vals){
+    var out=[];
+    for(var i=1;i<vals.length;i++){
+      var r=vals[i]||[]; var co=String(r[3]||"").trim(); if(!co&&!r[5]&&!r[7])continue;
+      var dv=String(r[12]||"").trim().toLowerCase(), q=String(r[16]||"").trim().toLowerCase(), st=String(r[15]||"").trim().toLowerCase();
+      out.push({
+        po:String(r[1]||"").trim(), poDate:pd(r[2]), poDateRaw:String(r[2]||""), company:co,
+        orderQty:num(r[5]), sentQty:num(r[7]), dispDate:pd(r[8]),
+        pendItem:String(r[10]||"").trim(), pendQty:num(r[11]),
+        delivery:dv.indexOf("on time")===0?"On Time":(dv.indexOf("delay")===0?"Delayed":""),
+        pending:q.indexOf("pend")===0||(!q&&st&&st!=="done")
+      });
+    }
+    return out;
+  }
+
+  function notice(text){
+    var n=$("notice"); n.hidden=false; n.className="msg";
+    n.innerHTML="<p></p>"; n.firstChild.textContent=text;
+    var b=document.createElement("button");b.className="btn";b.type="button";b.textContent="Try again";b.onclick=load;n.appendChild(b);
+  }
+
+  async function load(){
+    $("notice").hidden=true; $("sub").textContent="Sheet: "+SHEET_NAME+" · loading…";
+    try{
+      var url="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:csv&headers=1&sheet="+encodeURIComponent(SHEET_NAME);
+      var rs=await fetch(url); if(!rs.ok)throw new Error("HTTP "+rs.status);
+      var tx=await rs.text(); if(tx.trim().charAt(0)==="<")throw new Error("sheet is not public");
+      data=toRows(parseCSV(tx));
+      $("sub").textContent="Sheet: "+SHEET_NAME+" · "+fmt(data.length)+" lines · updated "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+      buildFilters(); render();
+    }catch(e){
+      notice("Sheet se data nahi aaya ("+(e&&e.message||"error")+"). Google Sheet me Share > General access > 'Anyone with the link' > Viewer karein, phir Try again dabayein.");
+      $("sub").textContent="Sheet: "+SHEET_NAME+" · not loaded";
+    }
+  }
+
+  function chipRow(id,key,items){
+    var el=$(id); el.innerHTML="";
+    items.forEach(function(it){
+      var b=document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=it.label;
+      b.setAttribute("aria-pressed",String(flt[key]===it.value));
+      b.onclick=function(){flt[key]=it.value; chipsRefresh(); render()};
+      b._k=key; b._v=it.value; el.appendChild(b);
+    });
+  }
+  function chipsRefresh(){
+    document.querySelectorAll(".chip").forEach(function(b){b.setAttribute("aria-pressed",String(flt[b._k]===b._v))});
+  }
+  function buildFilters(){
+    var months={},cos={};
+    data.forEach(function(r){ if(r.poDate)months[mkey(r.poDate)]=1; if(r.company)cos[r.company]=(cos[r.company]||0)+r.orderQty });
+    var mk=Object.keys(months).sort();
+    chipRow("fMonth","month",[{label:"All",value:"all"}].concat(mk.map(function(k){return{label:mlabel(k),value:k}})));
+    chipRow("fDelivery","delivery",[{label:"All",value:"all"},{label:"On Time",value:"On Time"},{label:"Delayed",value:"Delayed"}]);
+    chipRow("fStatus","status",[{label:"All",value:"all"},{label:"Delivered",value:"done"},{label:"Pending",value:"pending"}]);
+    var cl=Object.keys(cos).sort(function(a,b){return cos[b]-cos[a]});
+    chipRow("fCompany","company",[{label:"All",value:"all"}].concat(cl.map(function(c){return{label:c,value:c}})));
+  }
+  $("reset").onclick=function(){flt={month:"all",delivery:"all",status:"all",company:"all"};chipsRefresh();render()};
+  $("toggleF").onclick=function(){
+    var box=$("filters"); box.hidden=!box.hidden;
+    $("toggleF").textContent=box.hidden?"Show filters":"Hide filters";
+  };
+  $("refresh").onclick=load;
+
+  function pass(r,skipMonth){
+    if(!skipMonth&&flt.month!=="all"&&mkey(r.poDate)!==flt.month)return false;
+    if(flt.delivery!=="all"&&r.delivery!==flt.delivery)return false;
+    if(flt.status==="pending"&&!r.pending)return false;
+    if(flt.status==="done"&&r.pending)return false;
+    if(flt.company!=="all"&&r.company!==flt.company)return false;
+    return true;
+  }
+  function empty(id,t){ if(charts[id]){charts[id].destroy();delete charts[id]} $(id).innerHTML='<div class="empty">'+t+'</div>' }
+  function draw(id,cfg){
+    if(charts[id])charts[id].destroy();
+    $(id).innerHTML='<canvas></canvas>';
+    cfg.options=cfg.options||{}; cfg.options.responsive=true; cfg.options.maintainAspectRatio=false;
+    charts[id]=new Chart($(id).firstChild,cfg);
+  }
+  function kpi(l,v,n){return '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="n">'+n+"</div></div>"}
+
+  function render(){
+    var rows=data.filter(function(r){return pass(r,false)});
+    var exMonth=data.filter(function(r){return pass(r,true)});
+    var mut=css("--muted"),line=css("--line"),acc=css("--accent"),acc2=css("--accent-2"),good=css("--good"),bad=css("--bad"),warn=css("--warn");
+    if(window.Chart){Chart.defaults.color=mut;Chart.defaults.font.family=css("--font-body");Chart.defaults.borderColor=line}
+
+    var orderTot=0,sent=0,on=0,del=0,pendQty=0,pendLines=0;
+    rows.forEach(function(r){orderTot+=r.orderQty;sent+=r.sentQty;if(r.delivery==="On Time")on++;if(r.delivery==="Delayed")del++;if(r.pending){pendQty+=r.pendQty;pendLines++}});
+    var pct=on+del?Math.round(on*1000/(on+del))/10:0, pendPct=orderTot?Math.round(pendQty*1000/orderTot)/10:0;
+    $("kpis").innerHTML=
+      kpi("Total order qty",fmt(orderTot),"column F, "+fmt(rows.length)+" lines")+
+      kpi("Dispatched qty",fmt(sent),"column H")+
+      '<div class="kpi"><div class="l">On time</div><div class="v">'+pct+'%</div><div class="n">'+fmt(on)+" on time, "+fmt(del)+' delayed</div><div class="bar"><i style="width:'+pct+'%"></i></div></div>'+
+      kpi("Pending qty",fmt(pendQty),fmt(pendLines)+" lines pending"+(orderTot?", "+pendPct+"% of order qty":""));
+    if(!window.Chart)return;
+
+    var byCo={}; rows.forEach(function(r){if(r.company)byCo[r.company]=(byCo[r.company]||0)+r.orderQty});
+    var cl=Object.keys(byCo).sort(function(a,b){return byCo[b]-byCo[a]}).slice(0,10);
+    if(!cl.length||!orderTot)empty("cvCompany","No orders for these filters.");
+    else draw("cvCompany",{type:"bar",data:{labels:cl,datasets:[{label:"Order qty",data:cl.map(function(c){return byCo[c]}),backgroundColor:acc,borderRadius:4}]},
+      options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return " "+fmt(c.parsed.x)}}}},
+        scales:{x:{ticks:{callback:function(v){return fmt(v)}},grid:{color:line}},y:{ticks:{callback:function(v){return trunc(this.getLabelForValue(v),24)}},grid:{display:false}}}}});
+
+    if(!on&&!del)empty("cvTime","No delivery results for these filters.");
+    else draw("cvTime",{type:"doughnut",data:{labels:["On Time","Delayed"],datasets:[{data:[on,del],backgroundColor:[good,bad],borderColor:css("--surface"),borderWidth:2}]},
+      options:{cutout:"62%",plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:function(c){return " "+c.label+": "+fmt(c.parsed)+" lines ("+Math.round(c.parsed*1000/(on+del))/10+"%)"}}}}}});
+
+    var om={},dm={},dc={},seen={};
+    exMonth.forEach(function(r){
+      if(r.poDate){var k=mkey(r.poDate);om[k]=(om[k]||0)+r.orderQty;seen[k]=1}
+      if(r.dispDate&&r.sentQty){var d=mkey(r.dispDate);dm[d]=(dm[d]||0)+r.sentQty;dc[d]=(dc[d]||0)+1;seen[d]=1}
+    });
+    var ml=Object.keys(seen).sort();
+    if(!ml.length)empty("cvMonth","No dated lines for these filters.");
+    else draw("cvMonth",{type:"bar",data:{labels:ml.map(mlabel),datasets:[
+      {label:"Order qty (PO month)",data:ml.map(function(k){return om[k]||0}),backgroundColor:ml.map(function(k){return flt.month==="all"||flt.month===k?acc:acc2}),borderRadius:4},
+      {label:"Dispatched qty (dispatch month)",data:ml.map(function(k){return dm[k]||0}),backgroundColor:good,borderRadius:4}]},
+      options:{plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:function(c){return " "+c.dataset.label+": "+fmt(c.parsed.y)},
+        afterLabel:function(c){return c.datasetIndex===1?" "+(dc[ml[c.dataIndex]]||0)+" dispatch lines":""}}}},
+        scales:{y:{ticks:{callback:function(v){return fmt(v)}},grid:{color:line}},x:{grid:{display:false}}}}});
+
+    var pc={}; rows.forEach(function(r){if(r.pending&&r.pendQty)pc[r.company]=(pc[r.company]||0)+r.pendQty});
+    var pl=Object.keys(pc).sort(function(a,b){return pc[b]-pc[a]}).slice(0,10);
+    if(!pl.length)empty("cvPending","Nothing pending for these filters.");
+    else draw("cvPending",{type:"bar",data:{labels:pl,datasets:[{label:"Pending qty",data:pl.map(function(c){return pc[c]}),backgroundColor:warn,borderRadius:4}]},
+      options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return " "+fmt(c.parsed.x)}}}},
+        scales:{x:{ticks:{callback:function(v){return fmt(v)}},grid:{color:line}},y:{ticks:{callback:function(v){return trunc(this.getLabelForValue(v),24)}},grid:{display:false}}}}});
+
+    var pr=rows.filter(function(r){return r.pending&&r.pendQty}).sort(function(a,b){return b.pendQty-a.pendQty});
+    $("pendHint").textContent=pr.length?("Showing "+Math.min(pr.length,100)+" of "+fmt(pr.length)+" pending lines, largest first."):"No pending lines for these filters.";
+    $("pendBody").innerHTML=pr.slice(0,100).map(function(r){
+      return "<tr><td>"+esc(r.company)+"</td><td>"+esc(r.po)+"</td><td>"+esc(r.poDateRaw)+"</td><td>"+esc(r.pendItem||"-")+'</td><td class="num"><span class="pill">'+fmt(r.pendQty)+"</span></td></tr>";
+    }).join("");
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>
+```
